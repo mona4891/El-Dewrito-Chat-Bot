@@ -1,0 +1,349 @@
+================================================================================
+                        CORTANA BOT — INSTALLATION & USER GUIDE
+                        For ElDewrito 0.7.1 Dedicated Servers
+================================================================================
+
+OVERVIEW
+--------
+Cortana is an AI-powered chat assistant for ElDewrito servers. Players can ask
+questions in game chat and receive real-time responses. The bot also features
+server moderation tools, web search, YouTube link fetching, kill streak
+announcements, and player join detection.
+
+--------------------------------------------------------------------------------
+SECTION 1 — REQUIREMENTS
+--------------------------------------------------------------------------------
+
+Before installing, make sure you have the following:
+
+  - Windows PC running ElDewrito 0.7.1
+  - ElDewrito dedicated server files (dedicated_server.bat)
+  - Python 3.10 or newer
+  - A free Groq API key (primary AI provider)
+  - Optional: Cerebras and/or Mistral API keys (fallback providers)
+
+--------------------------------------------------------------------------------
+SECTION 2 — FOLDER STRUCTURE
+--------------------------------------------------------------------------------
+
+Create a folder anywhere on your PC for the bot. For example:
+
+  C:\CortanaBot\
+
+Place the following files inside that folder:
+
+  C:\CortanaBot\
+      cortana_bot.py      <- the main bot script
+      config.txt          <- your settings and API keys
+      bans.json           <- created automatically when first ban is issued
+
+Keep all three files in the same folder at all times.
+
+--------------------------------------------------------------------------------
+SECTION 3 — INSTALLING PYTHON
+--------------------------------------------------------------------------------
+
+1. Go to https://python.org/downloads
+2. Download the latest Python version
+3. Run the installer
+4. IMPORTANT: Check the box that says "Add Python to PATH" before installing
+5. Complete the installation
+
+To verify Python installed correctly, open Command Prompt and run:
+
+  python --version
+
+You should see something like: Python 3.12.x
+
+--------------------------------------------------------------------------------
+SECTION 4 — INSTALLING REQUIRED LIBRARIES
+--------------------------------------------------------------------------------
+
+Open Command Prompt and run this command:
+
+  pip install websocket-client requests duckduckgo-search
+
+Wait for it to finish. You only need to do this once.
+
+--------------------------------------------------------------------------------
+SECTION 5 — GETTING API KEYS
+--------------------------------------------------------------------------------
+
+You need at least one API key to run the bot. Groq is recommended as the
+primary provider since it is free and fast.
+
+  GROQ (Primary — Recommended)
+  -----------------------------
+  1. Go to https://console.groq.com
+  2. Sign up for a free account
+  3. Click "API Keys" in the left sidebar
+  4. Click "Create Key" and give it a name (e.g. "cortana-bot")
+  5. Copy the key — it starts with gsk_
+
+  CEREBRAS (Optional Fallback)
+  -----------------------------
+  1. Go to https://cloud.cerebras.ai
+  2. Sign up for a free account
+  3. Navigate to API Keys and create one
+  4. Copy the key
+
+  MISTRAL (Optional Fallback — 1B tokens/month free)
+  ---------------------------------------------------
+  1. Go to https://console.mistral.ai
+  2. Sign up for a free account
+  3. Navigate to API Keys and create one
+  4. Copy the key
+
+You only need Groq to get started. Cerebras and Mistral are optional backups
+that activate automatically if Groq hits its rate limit.
+
+--------------------------------------------------------------------------------
+SECTION 6 — CONFIGURING THE BOT
+--------------------------------------------------------------------------------
+
+Open config.txt in Notepad and fill in your values:
+
+  GROQ_API_KEY=gsk_yourkeyhere
+  CEREBRAS_API_KEY=yourkeyhere
+  MISTRAL_API_KEY=yourkeyhere
+  RCON_PASSWORD=yourserverpassword
+  RCON_PORT=11776
+  OWNER_UUID=youruuidhere
+
+Notes:
+  - Leave CEREBRAS_API_KEY and MISTRAL_API_KEY blank if you don't have them
+  - RCON_PASSWORD must match Server.RconPassword in dewrito_prefs.cfg
+  - RCON_PORT is almost always 11776 for dedicated servers
+  - OWNER_UUID is your player UUID — see Section 7 for how to find it
+
+--------------------------------------------------------------------------------
+SECTION 7 — FINDING YOUR PLAYER UUID
+--------------------------------------------------------------------------------
+
+Your UUID is a unique identifier tied to your ElDewrito account. It is used
+to verify that only you can use admin commands.
+
+To find your UUID:
+  1. Start your ElDewrito dedicated server
+  2. Join the server as a player
+  3. Open your browser and go to: http://localhost:11775
+  4. Find your player entry in the JSON output
+  5. Copy the value of the "uid" field (e.g. "a1b2c3d4e5f6g7h8")
+
+Paste that value into config.txt next to OWNER_UUID.
+Do not include the "0x" prefix if it appears.
+
+--------------------------------------------------------------------------------
+SECTION 8 — CONFIGURING ELDEWRITO FOR RCON
+--------------------------------------------------------------------------------
+
+The bot communicates with your server via RCON. You need to enable it.
+
+1. Find your dewrito_prefs.cfg file. It is usually located at:
+     C:\Users\YourName\AppData\Local\ElDewrito\
+
+   Or in your ElDewrito game folder.
+
+2. Open it in Notepad and add or edit these lines:
+
+     Server.RconPassword "yourpassword"
+     Server.SendChatToRconClients "1"
+
+3. The password here must match RCON_PASSWORD in config.txt exactly.
+
+4. Save the file and restart the dedicated server.
+
+--------------------------------------------------------------------------------
+SECTION 9 — RUNNING THE BOT
+--------------------------------------------------------------------------------
+
+IMPORTANT: Always start the dedicated server BEFORE running the bot.
+
+Step 1: Start the dedicated server
+  - Double-click dedicated_server.bat in your ElDewrito folder
+  - Wait for it to finish loading (you will see "starting game..." message)
+
+Step 2: Run the bot
+  - Open Command Prompt
+  - Navigate to your bot folder:
+      cd C:\CortanaBot
+  - Run the bot:
+      python cortana_bot.py
+
+Step 3: Verify it is working
+  - You should see:
+      [RCON] Connected and authenticated!
+      [LOG] Ready.
+  - In-game you will see:
+      Cortana: Cortana online. Type @cortana <question> to get started.
+
+Leave the Command Prompt window open while the server is running.
+Closing it will stop the bot.
+
+--------------------------------------------------------------------------------
+SECTION 10 — PLAYER COMMANDS
+--------------------------------------------------------------------------------
+
+Any player on the server can use these commands in game chat:
+
+  @cortana <question>     Ask Cortana anything
+  @ai <question>          Same as @cortana
+  !ai <question>          Same as @cortana
+  /ai <question>          Same as @cortana
+  @bot <question>         Same as @cortana
+
+Examples:
+  @cortana what is the best weapon in Halo 3?
+  @ai find me the Halo theme on YouTube
+  @cortana who is winning right now?
+  @ai search for ElDewrito download
+
+The bot has a 30-second cooldown per player to prevent spam.
+If the bot is busy, it will tell you to try again shortly.
+
+--------------------------------------------------------------------------------
+SECTION 11 — ADMIN COMMANDS
+--------------------------------------------------------------------------------
+
+These commands can only be used by the server owner (verified by UUID).
+If anyone else tries to use them, the bot will deny access.
+
+  BOT CONTROL
+  -----------
+  !ai on                  Turn the bot on
+  !ai off                 Turn the bot off
+  !ai status              Show current status, provider, cooldown, queue info
+  !ai clear               Reset all player cooldowns immediately
+  !ai cooldown <seconds>  Change the per-player cooldown
+                          Example: !ai cooldown 60
+
+  MODERATION
+  ----------
+  !ai kick <name>                 Kick a player from the server
+                                  Example: !ai kick PlayerName
+
+  !ai ban <name>                  Permanently ban a player
+                                  The player is kicked immediately
+                                  Ban is saved to bans.json with name, UUID,
+                                  IP address, and date/time
+                                  Example: !ai ban PlayerName
+
+  !ai tempban <name> <minutes>    Temporarily ban a player
+                                  Player is kicked immediately and cannot
+                                  rejoin until the time expires
+                                  Example: !ai tempban PlayerName 30
+
+  !ai unban <name>                Remove a ban (permanent or temporary)
+                                  Example: !ai unban PlayerName
+
+  !ai banlist                     Show all currently active bans (up to 5)
+
+  AI PROVIDER
+  -----------
+  !ai provider groq               Force the bot to use Groq
+  !ai provider cerebras           Force the bot to use Cerebras
+  !ai provider mistral            Force the bot to use Mistral
+  !ai provider auto               Return to automatic fallback mode
+                                  (Groq → Cerebras → Mistral)
+
+--------------------------------------------------------------------------------
+SECTION 12 — AUTOMATIC FEATURES
+--------------------------------------------------------------------------------
+
+These run automatically without any commands needed:
+
+  KILL STREAK ANNOUNCEMENTS
+    Cortana announces kill streaks in chat at milestones:
+      5 kills  — "PlayerName is on a killing spree. Impressive, I suppose."
+      10 kills — "PlayerName with 10 kills straight. Someone's having a good day."
+      15 kills — "PlayerName at 15. At this point I'd recommend the others
+                  reconsider their strategy."
+      20 kills — "PlayerName is unstoppable. Statistically speaking, anyway."
+
+  PLAYER JOIN GREETING
+    When a new player joins the server, Cortana greets them:
+      "Welcome, PlayerName. Type @cortana <question> if you need anything."
+
+  BAN ENFORCEMENT
+    The bot checks every 10 seconds for banned players who may have joined.
+    If a banned player is detected, they are kicked automatically.
+    Expired temporary bans are cleaned up automatically.
+
+  AI PROVIDER FALLBACK
+    If the primary provider (Groq) fails or hits its rate limit, the bot
+    automatically tries Cerebras, then Mistral, without interrupting service.
+
+--------------------------------------------------------------------------------
+SECTION 13 — BAN LIST FILE
+--------------------------------------------------------------------------------
+
+Bans are stored in bans.json in the same folder as the script.
+The file is created automatically when the first ban is issued.
+
+Each ban entry contains:
+  - Player name
+  - Player UUID
+  - Player IP address
+  - Reason for ban
+  - Date and time of ban
+  - Expiry date/time (for temporary bans) or "permanent"
+
+You can edit this file manually in Notepad if needed, but be careful with
+the JSON formatting. Back it up before editing.
+
+--------------------------------------------------------------------------------
+SECTION 14 — TROUBLESHOOTING
+--------------------------------------------------------------------------------
+
+Bot says "Connection refused":
+  → Make sure the dedicated server is running before starting the bot
+  → Make sure you are running the dedicated server, not a listen server
+  → Try running eldorado.exe as administrator
+
+Bot connects but chat messages don't appear in game:
+  → Make sure Server.SendChatToRconClients "1" is in dewrito_prefs.cfg
+  → Restart the dedicated server after editing the cfg file
+
+Bot responds but admin commands don't work:
+  → Check that OWNER_UUID in config.txt matches your actual UUID exactly
+  → Find your UUID at http://localhost:11775 while in the server
+
+API errors in Command Prompt:
+  → Check that your API key in config.txt is correct and has no extra spaces
+  → If Groq is rate limited, it will automatically try the next provider
+
+Password authentication fails:
+  → Make sure RCON_PASSWORD in config.txt matches Server.RconPassword in
+    dewrito_prefs.cfg exactly, including capitalization
+
+Bot stops responding after a while:
+  → The RCON connection may have dropped — restart the bot script
+
+--------------------------------------------------------------------------------
+SECTION 15 — UPDATING API KEYS
+--------------------------------------------------------------------------------
+
+To update or add API keys at any time:
+  1. Open config.txt in Notepad
+  2. Edit the relevant line
+  3. Save the file
+  4. Restart the bot (Ctrl+C to stop, then python cortana_bot.py again)
+
+You do not need to modify the script itself for any key changes.
+
+--------------------------------------------------------------------------------
+SECTION 16 — MOVING THE BOT TO A NEW PC
+--------------------------------------------------------------------------------
+
+To move the bot to a different computer:
+  1. Install Python on the new PC (Section 3)
+  2. Install the required libraries (Section 4)
+  3. Copy the entire CortanaBot folder to the new PC
+  4. Update config.txt with the new server's RCON password if different
+  5. Run as normal
+
+The bans.json file will carry over with all existing bans intact.
+
+================================================================================
+                                  END OF GUIDE
+================================================================================
