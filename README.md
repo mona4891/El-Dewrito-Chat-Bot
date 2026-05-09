@@ -1,6 +1,5 @@
 # El-Dewrito-Chat-Bot
-El Dewrito Chat Bot is an AI-powered chat assistant for ElDewrito servers🤖.
-An AI-powered chat assistant and moderation tool for **ElDewrito 0.7.1** dedicated servers.
+El Dewrito Chat Bot an AI-powered chat assistant and moderation tool for **ElDewrito 0.7.1** dedicated servers🤖.
 
 Players can ask questions directly in game chat and receive real-time responses. The bot also handles server moderation, web search, YouTube link fetching, kill streak announcements, and more.
 
