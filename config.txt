@@ -1,0 +1,15 @@
+# ─────────────────────────────────────────────
+# Cortana Bot - Configuration File
+# ─────────────────────────────────────────────
+
+# API Keys
+GROQ_API_KEY=
+CEREBRAS_API_KEY=
+MISTRAL_API_KEY=
+
+# RCON Connection
+RCON_PASSWORD=
+RCON_PORT=11776
+
+# Server Owner UUID (no 0x prefix) — only this player can use admin commands
+OWNER_UUID=
