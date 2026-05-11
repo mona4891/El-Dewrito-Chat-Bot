@@ -105,16 +105,18 @@ OLLAMA_MODEL = "qwen2.5:1.5b"
 
 IGNORED_SENDER_NAMES = {"bot"}
 
+EXPLICIT_SEARCH_KEYWORDS = [
+    "search", "find", "look up", "google", "look for",
+    "youtube", "video", "watch", "link", "url", "website",
+    "give me", "send me", "download", "listen to", "song", "music", "clip"
+]
+
 CURRENT_INFO_KEYWORDS = [
     "today", "now", "current", "latest", "recent", "news", "right now",
     "this week", "this month", "this year", "2026", "2025", "just happened",
     "score", "winner", "update", "new", "release", "launched", "announced",
     "weather", "temperature", "forecast", "rain", "sunny", "wind", "humidity",
     "price", "cost", "stock", "crypto", "bitcoin", "match", "game", "event"
-]
-EXPLICIT_SEARCH_KEYWORDS = [
-    "search", "find", "look up", "google", "look for",
-    "youtube", "video", "watch", "link", "url", "website"
 ]
 
 # Auto-moderation
