@@ -2,14 +2,37 @@
 # Cortana Bot - Configuration File
 # ─────────────────────────────────────────────
 
-# API Keys
-GROQ_API_KEY=
-CEREBRAS_API_KEY=
-MISTRAL_API_KEY=
+# ── API Keys ──────────────────────────────────
+# Fill in the ones you have, leave others blank.
 
-# RCON Connection
-RCON_PASSWORD=
+# Groq (Primary — recommended, free)
+# Get key: https://console.groq.com
+GROQ_API_KEY=your-groq-key-here
+
+# Cerebras (First fallback, free)
+# Get key: https://cloud.cerebras.ai
+CEREBRAS_API_KEY=your-cerebras-key-here
+
+# Mistral (Second fallback, free — 1B tokens/month)
+# Get key: https://console.mistral.ai
+MISTRAL_API_KEY=your-mistral-key-here
+
+# OpenRouter (Third fallback, free — auto-selects best free model)
+# Get key: https://openrouter.ai
+OPENROUTER_API_KEY=your-openrouter-key-here
+
+# ── RCON Connection ───────────────────────────
+# Must match Server.RconPassword in dewrito_prefs.cfg
+RCON_PASSWORD=your-rcon-password
+
+# RCON port — almost always 11776 for dedicated servers
 RCON_PORT=11776
 
-# Server Owner UUID (no 0x prefix) — only this player can use admin commands
-OWNER_UUID=
+# ── Server Owner ──────────────────────────────
+# Your player UUID — no 0x prefix
+# Find it at http://localhost:11775 while in the server (uid field)
+OWNER_UUID=your-uuid-here
+
+# Your PrivKey from keys.cfg — copy everything BEFORE the first "+" sign
+# Example: if your key is "abc123+xyz456...", put only "abc123"
+OWNER_PRIVKEY=your-privkey-here
