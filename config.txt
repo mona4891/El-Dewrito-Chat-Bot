@@ -36,3 +36,22 @@ OWNER_UUID=your-uuid-here
 # Your PrivKey from keys.cfg — copy everything BEFORE the first "+" sign
 # Example: if your key is "abc123+xyz456...", put only "abc123"
 OWNER_PRIVKEY=your-privkey-here
+
+
+# ── Discord Bridge (optional) ─────────────────
+# Leave blank if you don't want Discord integration.
+# Toggle on/off in-game with: !ai discord on/off
+
+# Webhook URL — for game chat → Discord (one direction, no bot needed)
+# In Discord: Server Settings → Integrations → Webhooks → New Webhook → Copy URL
+DISCORD_WEBHOOK_URL=your-webhook-url-here
+
+# Bot Token — for Discord → game chat (both directions)
+# Create a bot at https://discord.com/developers/applications
+# Enable "Message Content Intent" under Bot settings
+# Get key: https://discord.com/developers/applications → Bot → Token
+DISCORD_BOT_TOKEN=your-discord-bot-token-here
+
+# Channel ID — the Discord channel to bridge with the game
+# Right-click the channel in Discord → Copy Channel ID (enable Developer Mode first)
+DISCORD_CHANNEL_ID=your-channel-id-here
