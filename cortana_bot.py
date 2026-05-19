@@ -523,6 +523,17 @@ def get_mod_pak_name(raw_mod_name: str) -> str:
             return pak_name
     
     return "base"
+    
+    
+    # Map variants that need a base map loaded first
+VARIANT_BASE_MAPS = {
+    "Fast CW 1.0": "s3d_edge",
+    "Fatkid Fort 3": "Guardian",
+}
+
+def get_base_map_for_variant(map_name: str) -> str:
+    """Return the base map for a variant, or None if it's a regular map"""
+    return VARIANT_BASE_MAPS.get(map_name)
 
 # ── Warning System ────────────────────────────
 
