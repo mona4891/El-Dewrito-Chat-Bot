@@ -121,7 +121,10 @@ OLLAMA_MODEL = "huihui_ai/gemma3-abliterated:1b"
 AFK_TIMEOUT_MINUTES = 0
 AFK_CHECK_INTERVAL = 60
 
-ANNOUNCEMENTS = []
+ANNOUNCEMENTS = [
+    "Welcome to our server! Type !cortana <question> to ask Cortana anything or just mention my name.",
+    "Reminder: keep it friendly in chat. Type !ai remember <note> to save server notes.",
+]
 ANNOUNCEMENT_INTERVAL = 600
 
 ROTATION_VOTE_WAIT = 25
@@ -160,7 +163,7 @@ def speak_to_game(text):
 CURRENT_INFO_KEYWORDS = [
     "today", "now", "current", "latest", "recent", "news", "right now",
     "score", "winner", "update", "new", "release", "weather", "temperature",
-    "price", "cost", "stock", "crypto", "bitcoin", "match"
+    "price", "cost", "stock", "crypto", "bitcoin", "match", "date", "time"
 ]
 EXPLICIT_SEARCH_KEYWORDS = [
     "search", "find", "look up", "google", "youtube", "video", "watch", "link", "url"
@@ -982,7 +985,7 @@ ws_connected = False
 # Bot State
 bot_enabled = True
 local_enabled = False
-memory_enabled = True
+memory_enabled = False
 automod_enabled = False
 announce_enabled = True
 rotation_enabled = False
@@ -991,6 +994,8 @@ discord_enabled = False
 stats_enabled = True
 voice_enabled = False
 load_balancing_enabled = False
+voting_enabled = True
+shouldannounce_enabled = True
 
 # Queues & Cooldowns
 player_last_ask = {}
@@ -2803,6 +2808,252 @@ def watch_chat_log():
                     continue
                 try_queue_request(player_name, player_uid, question)
 
+# ── Web Dashboard ─────────────────────────────────────────────
+from flask import Flask, jsonify, request
+from flask_cors import CORS
+
+web_app = Flask(__name__)
+CORS(web_app)  # Allows frontend to call the API
+
+# API endpoint for bot status
+@web_app.route('/api/status', methods=['GET'])
+def api_status():
+    return jsonify({
+        'bot_enabled': bot_enabled,
+        'local_enabled': local_enabled,
+        'voice_enabled': voice_enabled,
+        'rotation_enabled': rotation_enabled,
+        'afk_enabled': afk_enabled,
+        'discord_enabled': discord_enabled,
+        'automod_enabled': automod_enabled,
+        'announce_enabled': announce_enabled,
+        'load_balancing_enabled': load_balancing_enabled,
+        'memory_enabled': memory_enabled,
+        'voting_enabled': voting_enabled,
+        'shouldannounce': shouldannounce_enabled,
+        'players_online': len(get_server_info().get('players', [])),
+        'current_map': get_server_info().get('map', 'unknown'),
+        'game_status': get_server_info().get('status', 'unknown'),
+        'active_provider': get_active_provider_name(),
+        'mod_count': len(load_mods())
+    })
+
+# API endpoint for players
+@web_app.route('/api/players', methods=['GET'])
+def api_players():
+    info = get_server_info()
+    players = []
+    for p in info.get('players', []):
+        players.append({
+            'name': p.get('name', '?'),
+            'uid': p.get('uid', ''),
+            'score': p.get('score', 0),
+            'kills': p.get('kills', 0),
+            'deaths': p.get('deaths', 0),
+            'ping': p.get('ping', 0),
+            'team': p.get('team', '?')
+        })
+    return jsonify(players)
+
+# API endpoint for top Dewritos
+@web_app.route('/api/topdewritos', methods=['GET'])
+def api_topdewritos():
+    leaderboard = get_leaderboard()
+    result = []
+    for uid, data in leaderboard[:10]:
+        result.append({
+            'name': data.get('name', '?'),
+            'balance': data.get('balance', 0),
+            'bets_won': data.get('bets_won', 0),
+            'bets_lost': data.get('bets_lost', 0)
+        })
+    return jsonify(result)
+
+# API endpoint for bot commands (admin only)
+@web_app.route('/api/command', methods=['POST'])
+def api_command():
+    auth = request.headers.get('Authorization')
+    if auth != f'Bearer {OWNER_PRIVKEY}':
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    data = request.json
+    command = data.get('command', '')
+    
+    # Execute command (you'll need to adapt this)
+    result = execute_web_command(command)
+    return jsonify({'result': result})
+
+# Add these new endpoints after your existing ones
+
+@web_app.route('/api/kick', methods=['POST'])
+def api_kick():
+    auth = request.headers.get('Authorization')
+    if auth != f'Bearer {OWNER_PRIVKEY}':
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    data = request.json
+    player_name = data.get('name', '')
+    if not player_name:
+        return jsonify({'error': 'No player name'}), 400
+    
+    # Execute kick
+    do_kick("WebDashboard", OWNER_UUID, player_name)
+    return jsonify({'success': True, 'message': f'Kicked {player_name}'})
+
+@web_app.route('/api/ban', methods=['POST'])
+def api_ban():
+    auth = request.headers.get('Authorization')
+    if auth != f'Bearer {OWNER_PRIVKEY}':
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    data = request.json
+    player_name = data.get('name', '')
+    if not player_name:
+        return jsonify({'error': 'No player name'}), 400
+    
+    do_ban("WebDashboard", OWNER_UUID, player_name)
+    return jsonify({'success': True, 'message': f'Banned {player_name}'})
+
+@web_app.route('/api/tempban', methods=['POST'])
+def api_tempban():
+    auth = request.headers.get('Authorization')
+    if auth != f'Bearer {OWNER_PRIVKEY}':
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    data = request.json
+    player_name = data.get('name', '')
+    duration = data.get('duration', 5)
+    if not player_name:
+        return jsonify({'error': 'No player name'}), 400
+    
+    do_tempban("WebDashboard", OWNER_UUID, player_name, duration)
+    return jsonify({'success': True, 'message': f'Temp banned {player_name} for {duration} minutes'})
+
+@web_app.route('/api/mute', methods=['POST'])
+def api_mute():
+    auth = request.headers.get('Authorization')
+    if auth != f'Bearer {OWNER_PRIVKEY}':
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    data = request.json
+    player_name = data.get('name', '')
+    if not player_name:
+        return jsonify({'error': 'No player name'}), 400
+    
+    send_rcon(f"Server.MutePlayer {player_name}")
+    return jsonify({'success': True, 'message': f'Muted {player_name}'})
+
+@web_app.route('/api/unmute', methods=['POST'])
+def api_unmute():
+    auth = request.headers.get('Authorization')
+    if auth != f'Bearer {OWNER_PRIVKEY}':
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    data = request.json
+    player_name = data.get('name', '')
+    if not player_name:
+        return jsonify({'error': 'No player name'}), 400
+    
+    send_rcon(f"Server.UnmutePlayer {player_name}")
+    return jsonify({'success': True, 'message': f'Unmuted {player_name}'})
+
+@web_app.route('/api/say', methods=['POST'])
+def api_say():
+    auth = request.headers.get('Authorization')
+    if auth != f'Bearer {OWNER_PRIVKEY}':
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    data = request.json
+    message = data.get('message', '')
+    if not message:
+        return jsonify({'error': 'No message'}), 400
+    
+    send_chat(message)
+    return jsonify({'success': True, 'message': f'Sent: {message}'})
+
+@web_app.route('/api/feature', methods=['POST'])
+def api_feature():
+    auth = request.headers.get('Authorization')
+    if auth != f'Bearer {OWNER_PRIVKEY}':
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    data = request.json
+    feature = data.get('feature', '')
+    enabled = data.get('enabled', False)
+    
+    global rotation_enabled, afk_enabled, discord_enabled, automod_enabled, announce_enabled, voice_enabled
+    global load_balancing_enabled, memory_enabled, voting_enabled, shouldannounce_enabled
+    
+    if feature == 'rotation':
+        rotation_enabled = enabled
+        send_rcon(f"Server.RotationEnabled {'1' if enabled else '0'}")
+    elif feature == 'afk':
+        afk_enabled = enabled
+    elif feature == 'discord':
+        discord_enabled = enabled
+    elif feature == 'automod':
+        automod_enabled = enabled
+    elif feature == 'announce':
+        announce_enabled = enabled
+    elif feature == 'voice':
+        voice_enabled = enabled
+    elif feature == 'loadbalance':
+        load_balancing_enabled = enabled
+    elif feature == 'memory':
+        memory_enabled = enabled
+    elif feature == 'voting':
+        voting_enabled = enabled
+        send_rcon(f"Server.VotingEnabled {'1' if enabled else '0'}")
+    elif feature == 'shouldannounce':
+        shouldannounce_enabled = enabled
+        send_rcon(f"Server.ShouldAnnounce {'1' if enabled else '0'}")
+    
+    return jsonify({'success': True})
+
+@web_app.route('/api/mods', methods=['GET'])
+def api_mods():
+    """Return list of moderators"""
+    mods = load_mods()
+    result = []
+    for mod in mods:
+        result.append({
+            'name': mod.get('name', '?'),
+            'uid': mod.get('uid', '')
+        })
+    return jsonify(result)
+
+def execute_web_command(command: str) -> str:
+    """Execute a bot command from web interface"""
+    global OWNER_UUID, OWNER_PRIVKEY
+    try:
+        if command.startswith('!ai '):
+            remaining = command[4:].strip()
+            
+            # Get owner name from server if online
+            owner_name = "ServerOwner"
+            for p in get_server_info().get("players", []):
+                if p.get("uid", "").lower().replace("0x", "") == OWNER_UUID.lower().replace("0x", ""):
+                    owner_name = p.get("name", "ServerOwner")
+                    break
+            
+            # Execute the command with owner privileges
+            handle_command(owner_name, OWNER_UUID, "127.0.0.1", remaining)
+            return f"Command executed: {command}"
+        else:
+            return f"Unknown command format: {command}"
+    except Exception as e:
+        logger.error(f"Web command failed: {e}")
+        return f"Error executing command: {e}"
+
+def start_web_server():
+    """Start the Flask web server in a background thread"""
+    import logging
+    # Disable Flask's default access logging
+    log = logging.getLogger('werkzeug')
+    log.setLevel(logging.ERROR)
+    
+    web_app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False)
+
 # ── Main ──────────────────────────────────────
 
 if __name__ == "__main__":
@@ -2882,6 +3133,7 @@ if __name__ == "__main__":
     threading.Thread(target=check_banned_players, daemon=True).start()
     threading.Thread(target=check_afk, daemon=True).start()
     threading.Thread(target=scheduled_announcements, daemon=True).start()
+    threading.Thread(target=start_web_server, daemon=True).start()
     
     # Start scheduled backup thread
     threading.Thread(target=scheduled_backup, daemon=True).start()
